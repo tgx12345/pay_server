@@ -102,7 +102,7 @@ defmodule AlipayController do
     IO.inspect(body)
   end
 
-  def url_encode_mapValue(map) do
+  def url_encode_map_value(map) do
     Enum.reduce(map, %{}, fn {key, value}, acc ->
       Map.put(acc, key, URI.encode_www_form(value))
     end)
@@ -225,7 +225,7 @@ defmodule AlipayController do
     private_key =AlipayParams.get_private_key()
 
     signed_params = sign_params(sign_params, private_key)
-    signed_params =url_encode_mapValue(signed_params) |>map2sign_str
+    signed_params =url_encode_map_value(signed_params) |>map2sign_str
     url = "#{@app_gateway}?#{signed_params}"
     IO.puts(url)
     response = HTTPoison.get!(url, [{"Content-type", "application/json"}])
