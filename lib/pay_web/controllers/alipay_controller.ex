@@ -14,7 +14,7 @@ defmodule AlipayController do
   end
 
   def trade_refund(con, params2) do
-    par = AlipayParams.json_params() |> Map.put(:method, "alipay.trade.refund")
+    par = AlipayParams.json_params() |> Map.put("method", "alipay.trade.refund")
 
     params = %{
       "biz_content" =>
@@ -141,9 +141,9 @@ defmodule AlipayController do
 
     sorted_params = map2sign_str(data)
 
-    f = RsaEx.verify(sorted_params, sing, pem_string)
+    verify_result = RsaEx.verify(sorted_params, sing, pem_string)
     IO.puts("验签结果：")
-    IO.inspect(f)
+    IO.inspect(verify_result)
     json(con, params)
   end
 
