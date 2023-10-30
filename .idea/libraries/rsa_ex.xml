@@ -1,0 +1,21 @@
+<component name="libraryTable">
+  <library name="rsa_ex" type="mix">
+    <CLASSES>
+      <root url="file://$PROJECT_DIR$/_build/dev/lib/rsa_ex/ebin" />
+      <root url="file://$PROJECT_DIR$/_build/dev/lib/rsa_ex/ebin" />
+      <root url="file://$PROJECT_DIR$/_build/dev/lib/rsa_ex/ebin" />
+      <root url="file://$PROJECT_DIR$/_build/dev/lib/rsa_ex/ebin" />
+      <root url="file://$PROJECT_DIR$/_build/dev/lib/rsa_ex/ebin" />
+      <root url="file://$PROJECT_DIR$/_build/dev/lib/rsa_ex/ebin" />
+      <root url="file://$PROJECT_DIR$/_build/dev/lib/rsa_ex/ebin" />
+      <root url="file://$PROJECT_DIR$/_build/dev/lib/rsa_ex/ebin" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="file://$PROJECT_DIR$/deps/rsa_ex/lib" />
+      <root url="file://$PROJECT_DIR$/deps/rsa_ex/lib" />
+      <root url="file://$PROJECT_DIR$/deps/rsa_ex/lib" />
+      <root url="file://$PROJECT_DIR$/deps/rsa_ex/lib" />
+    </SOURCES>
+  </library>
+</component>

@@ -1,0 +1,21 @@
+<component name="libraryTable">
+  <library name="data_crypter" type="mix">
+    <CLASSES>
+      <root url="file://$PROJECT_DIR$/_build/dev/lib/data_crypter/ebin" />
+      <root url="file://$PROJECT_DIR$/_build/dev/lib/data_crypter/ebin" />
+      <root url="file://$PROJECT_DIR$/_build/dev/lib/data_crypter/ebin" />
+      <root url="file://$PROJECT_DIR$/_build/dev/lib/data_crypter/ebin" />
+      <root url="file://$PROJECT_DIR$/_build/dev/lib/data_crypter/ebin" />
+      <root url="file://$PROJECT_DIR$/_build/dev/lib/data_crypter/ebin" />
+      <root url="file://$PROJECT_DIR$/_build/dev/lib/data_crypter/ebin" />
+      <root url="file://$PROJECT_DIR$/_build/dev/lib/data_crypter/ebin" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="file://$PROJECT_DIR$/deps/data_crypter/lib" />
+      <root url="file://$PROJECT_DIR$/deps/data_crypter/lib" />
+      <root url="file://$PROJECT_DIR$/deps/data_crypter/lib" />
+      <root url="file://$PROJECT_DIR$/deps/data_crypter/lib" />
+    </SOURCES>
+  </library>
+</component>
