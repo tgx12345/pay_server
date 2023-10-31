@@ -1,8 +1,5 @@
 defmodule WechatPay do
   @moduledoc false
-  @aad "certificate"
-  @get "GET"
-  @post "POST"
   @appid "wxe8d5af3ef025f9bd"
   @mchid "1618517748"
   @serial_no "3D7A4DE67437BF0E37E6290A9EF87CF106A448EB"
@@ -24,19 +21,8 @@ defmodule WechatPay do
     else
       @app
     end
-    body = body_params
-    body = %{
-      "appid" => @appid,
-      "mchid" => @mchid,
-      "description" => "QQ公仔",
-      "out_trade_no" => "native9611",
-      "notify_url" => @notify_url,
-      "amount" => %{
-        "currency" => "CNY",
-        "total" => 1
-      }
-    }
-    sign_nonce_timestamp_map = build_sign_str(@post, url, body)
+    body = body_params|>Map.put("appid",@appid)|>Map.put("mchid",@mchid)
+    sign_nonce_timestamp_map = build_sign_str("POST", url, body)
     headers = get_headers(sign_nonce_timestamp_map)
     {:ok, response} = HTTPoison.post(@base_url <> url, Jason.encode!(body), headers)
     result = if get_verify(response)do
@@ -50,7 +36,7 @@ defmodule WechatPay do
   def sel_out_trade_no(num) do
     num = Map.get(num,"out_trade_no")
     # 构造签名串
-    sign_nonce_timestamp_map = build_sign_str(@get, @sel_out_trade_no_url <> num <> "?mchid=#{@mchid}")
+    sign_nonce_timestamp_map = build_sign_str("GET", @sel_out_trade_no_url <> num <> "?mchid=#{@mchid}")
     headers = get_headers(sign_nonce_timestamp_map)
     {:ok, response} = HTTPoison.get(@base_url <> @sel_out_trade_no_url <> num <> "?mchid=#{@mchid}", headers)
     result = if get_verify(response)do
@@ -65,7 +51,7 @@ defmodule WechatPay do
     num = Map.get(num,"out_trade_no")
     body = %{"mchid"=>@mchid}
     # 构造签名串
-    sign_nonce_timestamp_map = build_sign_str(@post, @close_out_trade_no_url <> num <> "/close",body)
+    sign_nonce_timestamp_map = build_sign_str("POST", @close_out_trade_no_url <> num <> "/close",body)
     headers = get_headers(sign_nonce_timestamp_map)
     {:ok, response} = HTTPoison.post(@base_url <> @close_out_trade_no_url <> num <> "/close",Jason.encode!(body), headers)
     result = if get_verify(response)do
@@ -78,17 +64,17 @@ defmodule WechatPay do
   #退款申请
   def refund(body_params) do
     body = body_params
-    body = %{
-      "out_refund_no" => num,
-      "out_trade_no" => num,
-      "notify_url" => @notify_url,
-      "amount" => %{
-        "refund" => 1,
-        "total" => 1,
-        "currency" => "CNY",
-      }
-    }
-    sign_nonce_timestamp_map = build_sign_str(@post, @refund, body)
+#    body = %{
+#      "out_refund_no" => num,
+#      "out_trade_no" => num,
+#      "notify_url" => @notify_url,
+#      "amount" => %{
+#        "refund" => 1,
+#        "total" => 1,
+#        "currency" => "CNY",
+#      }
+#    }
+    sign_nonce_timestamp_map = build_sign_str("POST", @refund, body)
     headers = get_headers(sign_nonce_timestamp_map)
     {:ok, response} = HTTPoison.post(@base_url <> @refund, Jason.encode!(body), headers)
     result = if get_verify(response)do
@@ -102,7 +88,7 @@ defmodule WechatPay do
   def refund_select(num) do
     num = "native963120"
     # 构造签名串
-    sign_nonce_timestamp_map = build_sign_str(@get, @refund_select <> num)
+    sign_nonce_timestamp_map = build_sign_str("GET", @refund_select <> num)
     headers = get_headers(sign_nonce_timestamp_map)
     {:ok, response} = HTTPoison.get(@base_url <> @refund_select <> num, headers)
     if get_verify(response) do
@@ -115,7 +101,7 @@ defmodule WechatPay do
   #获取平台证书，动态更新公钥
   def get_ptzs() do
     # 构造签名串
-    sign_nonce_timestamp_map = build_sign_str(@get, @ptzs_url)
+    sign_nonce_timestamp_map = build_sign_str("GET", @ptzs_url)
     headers = get_headers(sign_nonce_timestamp_map)
     {:ok, response} = HTTPoison.get(@base_url <> @ptzs_url, headers)
     IO.inspect(response)
@@ -278,6 +264,23 @@ defmodule WechatPay do
       {"Accept", "application/json"},
       {"Content-Type", "application/json"}
     ]
+  end
+
+  #验证请求参数的完整性和合法性(只验证了必填的参数)
+  def validate_map(map) do
+    case {
+      Map.get(map, "description"),
+      Map.get(map, "out_trade_no"),
+      Map.get(map, "notify_url"),
+      Map.get(map, "amount")["total"],
+      Map.get(map, "amount")["currency"]
+    } do
+      {value1, value2, value3, value4, value5}
+      when is_binary(value1) and is_binary(value2) and is_binary(value3) and is_integer(value4) and value5 == "CNY" ->
+        true
+      _ ->
+        false
+    end
   end
 end
 

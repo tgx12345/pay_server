@@ -28,7 +28,7 @@ defmodule PayWeb.Router do
     get "/", PageController, :index
   end
 
-  scope "/api/wechatPay" do
+  scope "/wx" do
     pipe_through :api
     post "/native", WechatPaymentController, :place_order_native
     post "/app", WechatPaymentController, :place_order_app
