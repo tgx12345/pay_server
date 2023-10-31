@@ -1,5 +1,8 @@
 defmodule WechatPay do
   @moduledoc false
+  @aad "certificate"
+  @get "GET"
+  @post "POST"
   @appid "wxe8d5af3ef025f9bd"
   @mchid "1618517748"
   @serial_no "3D7A4DE67437BF0E37E6290A9EF87CF106A448EB"
@@ -21,10 +24,25 @@ defmodule WechatPay do
     else
       @app
     end
+<<<<<<< HEAD
     body = body_params
            |> Map.put("appid", @appid)
            |> Map.put("mchid", @mchid)
     sign_nonce_timestamp_map = build_sign_str("POST", url, body)
+=======
+    body = %{
+      "appid" => @appid,
+      "mchid" => @mchid,
+      "description" => "QQ公仔",
+      "out_trade_no" => "native9611",
+      "notify_url" => @notify_url,
+      "amount" => %{
+        "currency" => "CNY",
+        "total" => 1
+      }
+    }
+    sign_nonce_timestamp_map = build_sign_str(@post, url, body)
+>>>>>>> 50eb56214ed9ad49b97b5ae8e9fb2b6b2b3dbb6d
     headers = get_headers(sign_nonce_timestamp_map)
     {:ok, response} = HTTPoison.post(@base_url <> url, Jason.encode!(body), headers)
     result = if get_verify(response)do
@@ -37,9 +55,13 @@ defmodule WechatPay do
 
   #查询订单
   def sel_out_trade_no(num) do
+<<<<<<< HEAD
     num = Map.get(num, "out_trade_no")
+=======
+    num = Map.get(num,"order_number")
+>>>>>>> 50eb56214ed9ad49b97b5ae8e9fb2b6b2b3dbb6d
     # 构造签名串
-    sign_nonce_timestamp_map = build_sign_str("GET", @sel_out_trade_no_url <> num <> "?mchid=#{@mchid}")
+    sign_nonce_timestamp_map = build_sign_str(@get, @sel_out_trade_no_url <> num <> "?mchid=#{@mchid}")
     headers = get_headers(sign_nonce_timestamp_map)
     {:ok, response} = HTTPoison.get(@base_url <> @sel_out_trade_no_url <> num <> "?mchid=#{@mchid}", headers)
     result = if get_verify(response)do
@@ -52,10 +74,17 @@ defmodule WechatPay do
 
   #关闭订单
   def close_out_trade_no(num) do
+<<<<<<< HEAD
     num = Map.get(num, "out_trade_no")
     body = %{"mchid" => @mchid}
     # 构造签名串
     sign_nonce_timestamp_map = build_sign_str("POST", @close_out_trade_no_url <> num <> "/close", body)
+=======
+    num = Map.get(num,"order_number")
+    body = %{"mchid"=>@mchid}
+    # 构造签名串
+    sign_nonce_timestamp_map = build_sign_str(@post, @close_out_trade_no_url <> num <> "/close",body)
+>>>>>>> 50eb56214ed9ad49b97b5ae8e9fb2b6b2b3dbb6d
     headers = get_headers(sign_nonce_timestamp_map)
     {:ok, response} = HTTPoison.post(
       @base_url <> @close_out_trade_no_url <> num <> "/close",
@@ -71,10 +100,26 @@ defmodule WechatPay do
   end
 
   #退款申请
+<<<<<<< HEAD
   def refund(body_params) do
     body = body_params
 
     sign_nonce_timestamp_map = build_sign_str("POST", @refund, body)
+=======
+  def refund(num) do
+    num = Map.get(num,"order_number")
+    body = %{
+      "out_refund_no" => num,
+      "out_trade_no" => num,
+      "notify_url" => @notify_url,
+      "amount" => %{
+        "refund" => 1,
+        "total" => 1,
+        "currency" => "CNY",
+      }
+    }
+    sign_nonce_timestamp_map = build_sign_str(@post, @refund, body)
+>>>>>>> 50eb56214ed9ad49b97b5ae8e9fb2b6b2b3dbb6d
     headers = get_headers(sign_nonce_timestamp_map)
     {:ok, response} = HTTPoison.post(@base_url <> @refund, Jason.encode!(body), headers)
     result = if get_verify(response)do
@@ -89,7 +134,7 @@ defmodule WechatPay do
   def refund_select(num) do
     num = Map.get(num, "out_refund_no")
     # 构造签名串
-    sign_nonce_timestamp_map = build_sign_str("GET", @refund_select <> num)
+    sign_nonce_timestamp_map = build_sign_str(@get, @refund_select <> num)
     headers = get_headers(sign_nonce_timestamp_map)
     {:ok, response} = HTTPoison.get(@base_url <> @refund_select <> num, headers)
     if get_verify(response) do
@@ -102,7 +147,7 @@ defmodule WechatPay do
   #获取平台证书，动态更新公钥
   def get_ptzs() do
     # 构造签名串
-    sign_nonce_timestamp_map = build_sign_str("GET", @ptzs_url)
+    sign_nonce_timestamp_map = build_sign_str(@get, @ptzs_url)
     headers = get_headers(sign_nonce_timestamp_map)
     {:ok, response} = HTTPoison.get(@base_url <> @ptzs_url, headers)
     IO.inspect(response)
@@ -265,6 +310,7 @@ defmodule WechatPay do
       {"Content-Type", "application/json"}
     ]
   end
+<<<<<<< HEAD
 
   #验证请求参数的完整性和合法性(只验证了必填的参数)
   def checkout_place_order_map(map) do
@@ -299,6 +345,23 @@ defmodule WechatPay do
         false
     end
   end
+=======
+  
+  #从请求中获取订单
+#  def get_order(body_params) do
+#    body = %{
+#      "appid" => @appid,
+#      "mchid" => @mchid,
+#      "description" => Map.get(body_params,"description"),
+#      "out_trade_no" => Map.get(body_params,"out_trade_no"),
+#      "notify_url" => @notify_url,
+#      "amount" => %{
+#        "currency" => "CNY",
+#        "total" => Map.get(body_params,"total")
+#      }
+#    }
+#  end
+>>>>>>> 50eb56214ed9ad49b97b5ae8e9fb2b6b2b3dbb6d
 end
 
 

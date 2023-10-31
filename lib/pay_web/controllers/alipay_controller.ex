@@ -1,103 +1,142 @@
 defmodule AlipayController do
   use PayWeb, :controller
 
-  @notify_url "http://cxu2qk.natappfree.cc/alipay_aysc"
-  @return_url "http://cxu2qk.natappfree.cc/"
+  @notify_url "http://slbzhy.cn:9102/alipay/async_url"
+  @return_url "http://slbzhy.cn:9102/"
   # "https://openapi.alipay.com/gateway.do"
   @app_gateway "https://openapi-sandbox.dl.alipaydev.com/gateway.do"
-  # http://localhost:4000/redirectPay?subject=大乐透&out_trade_no=000111&total_amount=9.00
+
+#D:\java\工作文件夹\新建文件夹\zip\neutrino-proxy-client-jar
   def start_pay(con, params) do
     json_params = AlipayParams.json_params() |> Map.put("method", "alipay.trade.page.pay")
-    params2 = %{
-      "return_url" => @return_url,
-      "notify_url" =>  @notify_url,
-      "biz_content" =>
-        %{
-          # 支付名称
-          "subject" => params["subject"],
-          # 扫码支付方式
-          "qr_pay_mode" => "2",
-          # 订单号
-          "out_trade_no" => params["out_trade_no"],
-          # 总金额
-          "total_amount" => params["total_amount"],
-          # 固定配置
-          "product_code" => "FAST_INSTANT_TRADE_PAY"
+
+    is_check =
+      check_map_keys(params["biz_content"], [
+        "subject",
+        "out_trade_no",
+        "total_amount",
+        "product_code"
+      ])
+
+    result_map =
+      if is_check == true do
+        params2 = %{
+          "return_url" => @return_url,
+          "notify_url" => @notify_url,
+          "biz_content" =>
+            params["biz_content"]
+            |> Jason.encode!()
         }
-        |> Jason.encode!()
-    }
-    params = Map.merge(json_params, params2)
 
-    response = get_response(params)
-    IO.inspect(response)
-    [{"Location", response_location}] = response.headers |> Enum.filter(fn {key, value} -> key == "Location" end)
-    redirect(con, external: response_location)
-  end
-  def pay(subject, out_trade_no, total_amount) do
+        params = Map.merge(json_params, params2)
 
+        response = get_response(params)
+
+        if response.status_code == 302 do
+          [{"Location", response_location}] =
+            response.headers |> Enum.filter(fn {key, _} -> key == "Location" end)
+
+          %{"page_pay_url" => response_location}
+        else
+          %{"msg_error" => "参数错误"}
+        end
+      else
+        %{"msg_error" => "缺少参数"}
+      end
+
+    json(con, result_map)
   end
 
   def trade_refund(con, params2) do
     par = AlipayParams.json_params() |> Map.put("method", "alipay.trade.refund")
 
-    params = %{
-      "biz_content" =>
-        %{
-          # 订单号
-          "out_trade_no" => params2["out_trade_no"],
-          # 总金额
-          "refund_amount" => params2["refund_amount"]
-        }
-        |> Jason.encode!()
-    }
+    is_check =
+      check_map_keys(params2["biz_content"], [
+        "out_trade_no",
+        #        "trade_no",  二选一
+        "refund_amount"
+      ])
 
-    params = Map.merge(par, params)
-    response = get_response(params)
-    response = response.body |> Jason.decode!()
-    IO.inspect(response)
+
+      response =
+      if is_check == true do
+        params = %{
+          "biz_content" =>
+            params2["biz_content"]
+            |> Jason.encode!()
+        }
+
+        params = Map.merge(par, params)
+        response = get_response(params)
+        response = response.body |> Jason.decode!()
+        IO.inspect(response)
+        response
+      else
+        %{"msg_error" => "缺少参数"}
+      end
+
     json(con, response)
   end
 
   def close_alipay(con, params2) do
     par = AlipayParams.json_params() |> Map.put("method", "alipay.trade.close")
 
-    params = %{
-      #    notify_url: @notify_url,
-      "biz_content" =>
-        %{
-          # 订单号
-          "out_trade_no" => params2["out_trade_no"]
-        }
-        |> Jason.encode!()
-    }
+    is_check =
+      check_map_keys(params2["biz_content"], [
+        "out_trade_no",
+        #        "trade_no",  二选一
+#        "operator_id"
+      ])
 
-    params = Map.merge(par, params)
-    response = get_response(params)
-    response = response.body |> Jason.decode!()
-    IO.inspect(response)
+    response =
+      if is_check == true do
+        params = %{
+          #    notify_url: @notify_url,
+          "biz_content" =>
+            params2["biz_content"]
+            |> Jason.encode!()
+        }
+
+        params = Map.merge(par, params)
+        response = get_response(params)
+        response = response.body |> Jason.decode!()
+        IO.inspect(response)
+        response
+      else
+        %{"msg_error" => "缺少参数"}
+      end
+
     json(con, response)
   end
 
-
-
-  def select_info(con, params2) do
+  def trade_query(con, params2) do
     par = AlipayParams.json_params() |> Map.put("method", "alipay.trade.query")
 
-    params = %{
-      "biz_content" =>
-        %{
-          # 订单号
-          "out_trade_no" => params2["out_trade_no"],
-          # 查询选项
-          "query_options" => params2["query_options"]
-        }
-        |> Jason.encode!()
-    }
+    is_check =
+      check_map_keys(params2["biz_content"], [
+        "out_trade_no"
+        #        "trade_no",  二选一
+        #        "query_options",  非必选
+      ])
 
-    params = Map.merge(par, params)
-    response = get_response(params)
-    body = response.body |> Jason.decode!()
-    IO.inspect(body)
+    response =
+      if is_check == true do
+        params = %{
+          "biz_content" =>
+            params2["biz_content"]
+            |> Jason.encode!()
+        }
+
+        params = Map.merge(par, params)
+        response = get_response(params)
+        body = response.body |> Jason.decode!()
+        IO.inspect(body)
+        body
+      else
+        %{"msg_error" => "缺少参数"}
+      end
+
+    json(con, response)
   end
 
   def url_encode_map_value(map) do
@@ -112,8 +151,6 @@ defmodule AlipayController do
     #{private_key}
     -----END PRIVATE KEY-----
     """
-
-    aes_key = "E1W8RFTZgfHO/d3sdjg1Ow=="
 
     sorted_params = map2sign_str(params)
 
@@ -142,73 +179,107 @@ defmodule AlipayController do
     verify_result = RsaEx.verify(sorted_params, sing, pem_string)
     IO.puts("验签结果：")
     IO.inspect(verify_result)
-    json(con, params)
+    if verify_result ==true do
+      json(con, %{"verify_result"=>"验签成功","params"=>params})
+    else
+      json(con, %{"verify_result"=>"验签失败","params"=>params})
+    end
+
   end
 
   #  http://localhost:4000/alipay_app?subject=大乐透&out_trade_no=70501111111S001111119&total_amount=9.00
   def alipay_app(con, params2) do
     par = AlipayParams.json_params() |> Map.put("method", "alipay.trade.app.pay")
 
-    params = %{
-      #      notify_url: @notify_url,
-      "biz_content" =>
-        %{
-          # 订单号
-          "out_trade_no" => params2["out_trade_no"],
-          # 总金额
-          "total_amount" => params2["total_amount"],
-          # 支付名称
-          "subject" => params2["subject"]
-        }
-        |> Jason.encode!()
-    }
+    is_check =
+      check_map_keys(params2["biz_content"], [
+        "subject",
+        "out_trade_no",
+        "total_amount"
+      ])
 
-    params = Map.merge(par, params)
-    response = get_response(params)
-    IO.inspect(response)
-    [{"Location", response_location}] =
-      response.headers |> Enum.filter(fn {key, value} -> key == "Location" end)
-    redirect(con, external: response_location)
+    result_map =
+      if is_check == true do
+        params = %{
+          #      notify_url: @notify_url,
+          "biz_content" =>
+            params2["biz_content"]
+            |> Jason.encode!()
+        }
+
+        params = Map.merge(par, params)
+        response = get_response(params)
+        IO.inspect(response)
+
+        [{"Location", response_location}] =
+          response.headers |> Enum.filter(fn {key, _} -> key == "Location" end)
+
+        %{"app_url"=> response_location}
+      else
+        %{"msg_error" => "缺少参数"}
+      end
+
+    json(con, result_map)
   end
 
   #  http://localhost:4000/redirectPay?subject=大乐透&out_trade_no=9091991&total_amount=9.00
   def alipay_refund_query(con, params2) do
     par = AlipayParams.json_params() |> Map.put("method", "alipay.trade.fastpay.refund.query")
-    params = %{
-      "biz_content" =>
-        %{
-          # 订单号
-          "out_trade_no" => params2["out_trade_no"],
-          # 退款请求号
-          "out_request_no" => params2["out_request_no"]
-          #                      "query_options" => params2["query_options"],  #查询选项
+
+    is_check =
+      check_map_keys(params2["biz_content"], [
+        "out_trade_no",
+        #        "trade_no",  二选一
+        # 退款请求号。请求退款接口时，传入的退款请求号，如果在退款请求时未传入，则该值为创建交易时的商户订单号。
+        "out_request_no"
+      ])
+
+    response =
+      if is_check == true do
+        params = %{
+          "biz_content" =>
+            params2["biz_content"]
+            |> Jason.encode!()
         }
-        |> Jason.encode!()
-    }
-    params = Map.merge(par, params)
-    response = get_response(params)
-    IO.inspect(response)
-    json(con, Jason.decode!(response.body))
+
+        params = Map.merge(par, params)
+        response = get_response(params)
+        response = response.body |> Jason.decode!()
+        IO.inspect(response)
+        response
+      else
+        %{"msg_error" => "缺少参数"}
+      end
+
+    json(con, response)
   end
 
-
+  #  def refund_card(con,params) do
+  #
+  #  end
 
   def verify_sign(con, params) do
     sing = params["sign"] |> Base.decode64!()
     data = params |> Map.delete("sign") |> Map.delete("sign_type")
     public_key = AlipayParams.get_public_key()
+
     pem_string = """
     -----BEGIN PUBLIC KEY-----
     #{public_key}
     -----END PUBLIC KEY-----
     """
+
     sorted_params = map2sign_str(data)
-    f = RsaEx.verify(sorted_params, sing, pem_string)
+    verify_result = RsaEx.verify(sorted_params, sing, pem_string)
+    if verify_result ==true do
+      json(con, %{"verify_result"=>"验签成功","params"=>params})
+    else
+      json(con, %{"verify_result"=>"验签失败","params"=>params})
+    end
   end
 
   #  http://localhost:4000/redirectPay?subject=大乐透&out_trade_no=1021012023222222&total_amount=9.00
   defp get_response(sign_params) do
-
     #    aes_key="E1W8RFTZgfHO/d3sdjg1Ow==" |> Base.decode64!()
     #    # 此处进行加密Aes
     #    biz_content= Map.get(sign_params,"biz_content")
@@ -220,21 +291,28 @@ defmodule AlipayController do
     #    biz_content= Base.encode64(biz_content)
     #    sign_params=Map.put(sign_params,"biz_content",biz_content)
 
-    private_key =AlipayParams.get_private_key()
+    private_key = AlipayParams.get_private_key()
 
     signed_params = sign_params(sign_params, private_key)
-    signed_params =url_encode_map_value(signed_params) |>map2sign_str
+    signed_params = url_encode_map_value(signed_params) |> map2sign_str
     url = "#{@app_gateway}?#{signed_params}"
     IO.puts(url)
-    response = HTTPoison.get!(url, [{"Content-type", "application/json"}])
+     HTTPoison.get!(url, [{"Content-type", "application/json"}])
   end
 
-  def map2sign_str(map)do
+  def map2sign_str(map) do
     map
-  |> Map.to_list()
-  |> Enum.sort(&(elem(&1, 0) <= elem(&2, 0)))
-  |> Enum.map(&"#{elem(&1, 0)}=#{elem(&1, 1)}")
-  |> Enum.join("&")
+    |> Map.to_list()
+    |> Enum.sort(&(elem(&1, 0) <= elem(&2, 0)))
+    |> Enum.map(&"#{elem(&1, 0)}=#{elem(&1, 1)}")
+    |> Enum.join("&")
   end
 
+  def check_map_keys(map, keys) do
+    if is_map(map) do
+      Enum.all?(keys, &Map.has_key?(map, &1))
+    else
+      false
+    end
+  end
 end

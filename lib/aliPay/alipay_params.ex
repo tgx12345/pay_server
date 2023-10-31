@@ -17,12 +17,12 @@ defmodule AlipayParams do
   end
 
   def get_private_key() do
-    File.read!("static/zhifubao/应用私钥RSA2048-敏感数据，请妥善保管.txt")
+    File.read!("static/zhifubao/RSA2048-app-private_key.txt")
   end
 
   # 支付宝公钥
   def get_public_key do
-    File.read!("static/zhifubao/支付宝公钥.txt")
+    File.read!("static/zhifubao/ali_public_key.txt")
   end
 
   def refund_card_params do

@@ -14,17 +14,21 @@ defmodule PayWeb.Router do
     plug :accepts, ["json"]
   end
 
-  scope "/" do
+  scope "/alipay" do
     pipe_through :api
 
-        get "/alipay_app" , AlipayController, :alipay_app
-        post "/alipay_refund_query" , AlipayController, :alipay_refund_query
-        post "/alipay_verify_sign" , AlipayController, :verify_sign
-        post "/alipay_close" , AlipayController, :close_alipay
-        post "/alipay_return" , AlipayController, :trade_refund
-        post "/alipay_async" ,  AlipayController, :alipay_async_notice
-        get "/redirectPay", AlipayController, :start_pay
+        post "/app" , AlipayController, :alipay_app
+        post "/refund_query" , AlipayController, :alipay_refund_query
+        post "/verify_sign" , AlipayController, :verify_sign
+        post "/trade_query" , AlipayController, :trade_query
+        post "/close" , AlipayController, :close_alipay
+        post "/refund" , AlipayController, :trade_refund
+        post "/async_url" ,  AlipayController, :alipay_async_notice
+        post "/redirect_pay", AlipayController, :start_pay
+  end
 
+  scope "/", PayWeb do
+    pipe_through :browser
     get "/", PageController, :index
   end
 
