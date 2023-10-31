@@ -24,7 +24,7 @@ defmodule PayWeb.Router do
         post "/close" , AlipayController, :close_alipay
         post "/return" , AlipayController, :trade_refund
         post "/async" ,  AlipayController, :alipay_async_notice
-        get "/redirect_pay", AlipayController, :start_pay
+        post "/redirect_pay", AlipayController, :start_pay
 
     get "/", PageController, :index
   end

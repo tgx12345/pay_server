@@ -5,13 +5,13 @@ defmodule AlipayController do
   @return_url "http://cxu2qk.natappfree.cc/"
   # "https://openapi.alipay.com/gateway.do"
   @app_gateway "https://openapi-sandbox.dl.alipaydev.com/gateway.do"
-  # http://localhost:4000/redirectPay?subject=大乐透&out_trade_no=000111&total_amount=9.00
-#http://slbzhy.cn:9102/alipay/redirect_pay?subject=%E5%A4%A7%E4%B9%90%E9%80%8F&out_trade_no=000111&total_amount=9.00
+
+#D:\java\工作文件夹\新建文件夹\zip\neutrino-proxy-client-jar
   def start_pay(con, params) do
     json_params = AlipayParams.json_params() |> Map.put("method", "alipay.trade.page.pay")
 
     is_check =
-      check_map_keys(params.biz_content, [
+      check_map_keys(params["biz_content"], [
         "subject",
         "out_trade_no",
         "total_amount",
@@ -24,7 +24,7 @@ defmodule AlipayController do
           "return_url" => @return_url,
           "notify_url" => @notify_url,
           "biz_content" =>
-            params.biz_content
+            params["biz_content"]
             #              %{
             #                # 支付名称
             #                "subject" => params["subject"],
@@ -63,7 +63,7 @@ defmodule AlipayController do
     par = AlipayParams.json_params() |> Map.put("method", "alipay.trade.refund")
 
     is_check =
-      check_map_keys(params2.biz_content, [
+      check_map_keys(params2["biz_content"], [
         "out_trade_no",
         #        "trade_no",  二选一
         "refund_amount"
@@ -74,7 +74,7 @@ defmodule AlipayController do
       if is_check == true do
         params = %{
           "biz_content" =>
-            params2.biz_content
+            params2["biz_content"]
             |> Jason.encode!()
         }
 
@@ -94,7 +94,7 @@ defmodule AlipayController do
     par = AlipayParams.json_params() |> Map.put("method", "alipay.trade.close")
 
     is_check =
-      check_map_keys(params2.biz_content, [
+      check_map_keys(params2["biz_content"], [
         "out_trade_no",
         #        "trade_no",  二选一
         "operator_id"
@@ -105,7 +105,7 @@ defmodule AlipayController do
         params = %{
           #    notify_url: @notify_url,
           "biz_content" =>
-            params2.biz_content
+            params2["biz_content"]
             |> Jason.encode!()
         }
 
@@ -125,7 +125,7 @@ defmodule AlipayController do
     par = AlipayParams.json_params() |> Map.put("method", "alipay.trade.query")
 
     is_check =
-      check_map_keys(params2.biz_content, [
+      check_map_keys(params2["biz_content"], [
         "out_trade_no"
         #        "trade_no",  二选一
         #        "query_options",  非必选
@@ -135,7 +135,7 @@ defmodule AlipayController do
       if is_check == true do
         params = %{
           "biz_content" =>
-            params2.biz_content
+            params2["biz_content"]
             |> Jason.encode!()
         }
 
@@ -206,7 +206,7 @@ defmodule AlipayController do
     par = AlipayParams.json_params() |> Map.put("method", "alipay.trade.app.pay")
 
     is_check =
-      check_map_keys(params2.biz_content, [
+      check_map_keys(params2["biz_content"], [
         "subject",
         "out_trade_no",
         "total_amount"
@@ -217,7 +217,7 @@ defmodule AlipayController do
         params = %{
           #      notify_url: @notify_url,
           "biz_content" =>
-            params2.biz_content
+            params2["biz_content"]
             |> Jason.encode!()
         }
 
@@ -241,7 +241,7 @@ defmodule AlipayController do
     par = AlipayParams.json_params() |> Map.put("method", "alipay.trade.fastpay.refund.query")
 
     is_check =
-      check_map_keys(params2.biz_content, [
+      check_map_keys(params2["biz_content"], [
         "out_trade_no",
         #        "trade_no",  二选一
         # 退款请求号。请求退款接口时，传入的退款请求号，如果在退款请求时未传入，则该值为创建交易时的商户订单号。
@@ -252,7 +252,7 @@ defmodule AlipayController do
       if is_check == true do
         params = %{
           "biz_content" =>
-            params2.biz_content
+            params2["biz_content"]
             |> Jason.encode!()
         }
 
