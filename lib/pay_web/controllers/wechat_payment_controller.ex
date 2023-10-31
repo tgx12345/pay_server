@@ -2,12 +2,14 @@ defmodule WechatPaymentController do
   use PayWeb, :controller
 
   def place_order_native(conn, _params) do
+
     result = if WechatPay.checkout_place_order_map(conn.body_params) do
       response = WechatPay.place_an_order(0, conn.body_params)
       json(conn, response |>Jason.decode!)
       else
       json(conn,%{"message"=>"请检查参数的完整性和合法性"})
     end
+
   end
 
   def callback(conn, _params) do
@@ -31,11 +33,13 @@ defmodule WechatPaymentController do
   end
 
   def place_order_app(conn, _params) do
+
     result = if WechatPay.checkout_place_order_map(conn.body_params) do
       response = WechatPay.place_an_order(1,conn.body_params)
       json(conn, response |>Jason.decode!)
     else
       json(conn,%{"message"=>"请检查参数的完整性和合法性"})
+
     end
   end
 
@@ -46,10 +50,11 @@ defmodule WechatPaymentController do
 
   def close_out_trade_no(conn, _params) do
     response = WechatPay.close_out_trade_no(conn.params)
-    json(conn, response |>Jason.decode!)
+    json(conn, response)
   end
 
   def refund(conn, _params) do
+
     result = if WechatPay.checkout_refund_map(conn.body_params) do
       response = WechatPay.refund(conn.body_params)
       json(conn, response |>Jason.decode!)
@@ -59,7 +64,7 @@ defmodule WechatPaymentController do
   end
 
   def refund_select(conn, _params) do
-    response = WechatPay.refund_select(123)
+    response = WechatPay.refund_select(conn.params)
     json(conn, response |>Jason.decode!)
   end
 
