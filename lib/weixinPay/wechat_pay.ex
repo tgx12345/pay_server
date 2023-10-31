@@ -285,6 +285,7 @@ defmodule WechatPay do
     end
   end
 
+  #jianc
   def checkout_refund_map(map) do
     case {
       Map.get(map, "out_refund_no"),
