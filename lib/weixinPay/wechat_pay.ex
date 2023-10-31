@@ -21,20 +21,23 @@ defmodule WechatPay do
     else
       @app
     end
-    body = body_params|>Map.put("appid",@appid)|>Map.put("mchid",@mchid)
+    body = body_params
+           |> Map.put("appid", @appid)
+           |> Map.put("mchid", @mchid)
     sign_nonce_timestamp_map = build_sign_str("POST", url, body)
     headers = get_headers(sign_nonce_timestamp_map)
     {:ok, response} = HTTPoison.post(@base_url <> url, Jason.encode!(body), headers)
     result = if get_verify(response)do
       response.body
     else
-      "下单响应验签失败"
+      %{"message" => "下单响应验签失败"}
+      |> Jason.encode!
     end
   end
 
   #查询订单
   def sel_out_trade_no(num) do
-    num = Map.get(num,"out_trade_no")
+    num = Map.get(num, "out_trade_no")
     # 构造签名串
     sign_nonce_timestamp_map = build_sign_str("GET", @sel_out_trade_no_url <> num <> "?mchid=#{@mchid}")
     headers = get_headers(sign_nonce_timestamp_map)
@@ -42,58 +45,56 @@ defmodule WechatPay do
     result = if get_verify(response)do
       response.body
     else
-      "查询订单响应验签失败"
+      %{"message" => "查询订单响应验签失败"}
+      |> Jason.encode!
     end
   end
 
   #关闭订单
   def close_out_trade_no(num) do
-    num = Map.get(num,"out_trade_no")
-    body = %{"mchid"=>@mchid}
+    num = Map.get(num, "out_trade_no")
+    body = %{"mchid" => @mchid}
     # 构造签名串
-    sign_nonce_timestamp_map = build_sign_str("POST", @close_out_trade_no_url <> num <> "/close",body)
+    sign_nonce_timestamp_map = build_sign_str("POST", @close_out_trade_no_url <> num <> "/close", body)
     headers = get_headers(sign_nonce_timestamp_map)
-    {:ok, response} = HTTPoison.post(@base_url <> @close_out_trade_no_url <> num <> "/close",Jason.encode!(body), headers)
+    {:ok, response} = HTTPoison.post(
+      @base_url <> @close_out_trade_no_url <> num <> "/close",
+      Jason.encode!(body),
+      headers
+    )
     result = if get_verify(response)do
       response.body
     else
-      "关闭订单响应验签失败"
+      %{"message" => "关闭订单响应验签失败"}
+      |> Jason.encode!
     end
   end
 
   #退款申请
   def refund(body_params) do
     body = body_params
-#    body = %{
-#      "out_refund_no" => num,
-#      "out_trade_no" => num,
-#      "notify_url" => @notify_url,
-#      "amount" => %{
-#        "refund" => 1,
-#        "total" => 1,
-#        "currency" => "CNY",
-#      }
-#    }
+
     sign_nonce_timestamp_map = build_sign_str("POST", @refund, body)
     headers = get_headers(sign_nonce_timestamp_map)
     {:ok, response} = HTTPoison.post(@base_url <> @refund, Jason.encode!(body), headers)
     result = if get_verify(response)do
       response.body
     else
-      "退款申请响应验签失败"
+      %{"message" => "退款申请响应验签失败"}
+      |> Jason.encode!
     end
   end
 
   #退款订单查询
   def refund_select(num) do
-    num = "native963120"
+    num = Map.get(num, "out_refund_no")
     # 构造签名串
     sign_nonce_timestamp_map = build_sign_str("GET", @refund_select <> num)
     headers = get_headers(sign_nonce_timestamp_map)
     {:ok, response} = HTTPoison.get(@base_url <> @refund_select <> num, headers)
     if get_verify(response) do
       response.body
-      else
+    else
       "查询退款订单响应验签失败"
     end
   end
@@ -189,9 +190,6 @@ defmodule WechatPay do
 
   #异步请求的验签(回调验签、解密)
   def get_verify_decrypt_back(conn) do
-    IO.inspect("=============================")
-    IO.inspect(conn)
-    IO.inspect("-----------------------------")
     body_params = conn.body_params
     json_string = """
     {
@@ -222,14 +220,16 @@ defmodule WechatPay do
                 |> elem(1) # 提取元组的第二个元素，即值
 
     signature = :base64.decode(signature)
-    pub_key = File.read!("static/certs/1618517748_wxp_pub.pem")
+    ptzs = File.read!("static/certs/wechatpay_29EA946404980EAC0D2F28BD78F0CDF333F5EEA3.pem")
+    pub_key_seq = X509.Certificate.from_pem!(ptzs)
+    pub_key = X509.Certificate.public_key(pub_key_seq)
     #构造应答签名串
     verify_str =
       "#{timestamp}\n" <>
       "#{nonce_str}\n" <>
       "#{json_encode}\n"
-    {:ok, valid} = RsaEx.verify(verify_str, signature, pub_key, :sha256)
-    result = if valid == true do
+    verify_result = :public_key.verify(verify_str, :sha256, signature, pub_key)
+    result = if verify_result == true do
       ciphertext = Map.get(Map.get(body_params, "resource"), "ciphertext")
       nonce = Map.get(Map.get(body_params, "resource"), "nonce")
       associated_data = Map.get(Map.get(body_params, "resource"), "associated_data")
@@ -267,7 +267,7 @@ defmodule WechatPay do
   end
 
   #验证请求参数的完整性和合法性(只验证了必填的参数)
-  def validate_map(map) do
+  def checkout_place_order_map(map) do
     case {
       Map.get(map, "description"),
       Map.get(map, "out_trade_no"),
@@ -277,6 +277,23 @@ defmodule WechatPay do
     } do
       {value1, value2, value3, value4, value5}
       when is_binary(value1) and is_binary(value2) and is_binary(value3) and is_integer(value4) and value5 == "CNY" ->
+        true
+      _ ->
+        false
+    end
+  end
+
+  def checkout_refund_map(map) do
+    case {
+      Map.get(map, "out_refund_no"),
+      Map.get(map, "out_trade_no"),
+      Map.get(map, "notify_url"),
+      Map.get(map, "amount")["refund"],
+      Map.get(map, "amount")["total"],
+      Map.get(map, "amount")["currency"]
+    } do
+      {value1, value2, value3, value4, value5, value6}
+      when is_binary(value1) and is_binary(value2) and is_binary(value3) and is_integer(value4) and is_integer(value5) and value6 == "CNY" ->
         true
       _ ->
         false
