@@ -6,7 +6,7 @@ defmodule AlipayController do
   # "https://openapi.alipay.com/gateway.do"
   @app_gateway "https://openapi-sandbox.dl.alipaydev.com/gateway.do"
 
-#D:\java\工作文件夹\新建文件夹\zip\neutrino-proxy-client-jar
+  # D:\java\工作文件夹\新建文件夹\zip\neutrino-proxy-client-jar
   def start_pay(con, params) do
     json_params = AlipayParams.json_params() |> Map.put("method", "alipay.trade.page.pay")
 
@@ -16,7 +16,7 @@ defmodule AlipayController do
         "out_trade_no",
         "total_amount",
         "product_code"
-      ])
+      ]) && Enum.all?(params["biz_content"],fn {_,v} -> is_binary(v) end)
 
     result_map =
       if is_check == true do
@@ -55,10 +55,9 @@ defmodule AlipayController do
         "out_trade_no",
         #        "trade_no",  二选一
         "refund_amount"
-      ])
+      ]) && Enum.all?(params2["biz_content"],fn {_,v} -> is_binary(v) end)
 
-
-      response =
+    response =
       if is_check == true do
         params = %{
           "biz_content" =>
@@ -83,10 +82,10 @@ defmodule AlipayController do
 
     is_check =
       check_map_keys(params2["biz_content"], [
-        "out_trade_no",
+        "out_trade_no"
         #        "trade_no",  二选一
-#        "operator_id"
-      ])
+        #        "operator_id"
+      ]) && Enum.all?(params2["biz_content"],fn {_,v} -> is_binary(v) end)
 
     response =
       if is_check == true do
@@ -117,7 +116,7 @@ defmodule AlipayController do
         "out_trade_no"
         #        "trade_no",  二选一
         #        "query_options",  非必选
-      ])
+      ]) && Enum.all?(params2["biz_content"],fn {_,v} -> is_binary(v) end)
 
     response =
       if is_check == true do
@@ -179,12 +178,12 @@ defmodule AlipayController do
     verify_result = RsaEx.verify(sorted_params, sing, pem_string)
     IO.puts("验签结果：")
     IO.inspect(verify_result)
-    if verify_result ==true do
-      json(con, %{"verify_result"=>"验签成功","params"=>params})
-    else
-      json(con, %{"verify_result"=>"验签失败","params"=>params})
-    end
 
+    if verify_result == true do
+      json(con, %{"verify_result" => "验签成功", "params" => params})
+    else
+      json(con, %{"verify_result" => "验签失败", "params" => params})
+    end
   end
 
   #  http://localhost:4000/alipay_app?subject=大乐透&out_trade_no=70501111111S001111119&total_amount=9.00
@@ -196,7 +195,7 @@ defmodule AlipayController do
         "subject",
         "out_trade_no",
         "total_amount"
-      ])
+      ]) && Enum.all?(params2["biz_content"],fn {_,v} -> is_binary(v) end)
 
     result_map =
       if is_check == true do
@@ -214,7 +213,7 @@ defmodule AlipayController do
         [{"Location", response_location}] =
           response.headers |> Enum.filter(fn {key, _} -> key == "Location" end)
 
-        %{"app_url"=> response_location}
+        %{"app_url" => response_location}
       else
         %{"msg_error" => "缺少参数"}
       end
@@ -232,7 +231,7 @@ defmodule AlipayController do
         #        "trade_no",  二选一
         # 退款请求号。请求退款接口时，传入的退款请求号，如果在退款请求时未传入，则该值为创建交易时的商户订单号。
         "out_request_no"
-      ])
+      ]) && Enum.all?(params2["biz_content"],fn {_,v} -> is_binary(v) end)
 
     response =
       if is_check == true do
@@ -271,10 +270,11 @@ defmodule AlipayController do
 
     sorted_params = map2sign_str(data)
     verify_result = RsaEx.verify(sorted_params, sing, pem_string)
-    if verify_result ==true do
-      json(con, %{"verify_result"=>"验签成功","params"=>params})
+
+    if verify_result == true do
+      json(con, %{"verify_result" => "验签成功", "params" => params})
     else
-      json(con, %{"verify_result"=>"验签失败","params"=>params})
+      json(con, %{"verify_result" => "验签失败", "params" => params})
     end
   end
 
@@ -297,7 +297,7 @@ defmodule AlipayController do
     signed_params = url_encode_map_value(signed_params) |> map2sign_str
     url = "#{@app_gateway}?#{signed_params}"
     IO.puts(url)
-     HTTPoison.get!(url, [{"Content-type", "application/json"}])
+    _response=  HTTPoison.get!(url, [{"Content-type", "application/json"}])
   end
 
   def map2sign_str(map) do
