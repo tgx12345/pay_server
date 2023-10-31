@@ -1,8 +1,8 @@
 defmodule AlipayController do
   use PayWeb, :controller
 
-  @notify_url "http://cxu2qk.natappfree.cc/alipay_aysc"
-  @return_url "http://cxu2qk.natappfree.cc/"
+  @notify_url "http://slbzhy.cn:9102/alipay/async_url"
+  @return_url "http://slbzhy.cn:9102/"
   # "https://openapi.alipay.com/gateway.do"
   @app_gateway "https://openapi-sandbox.dl.alipaydev.com/gateway.do"
 
@@ -25,18 +25,6 @@ defmodule AlipayController do
           "notify_url" => @notify_url,
           "biz_content" =>
             params["biz_content"]
-            #              %{
-            #                # 支付名称
-            #                "subject" => params["subject"],
-            #                # 扫码支付方式
-            #                "qr_pay_mode" => "2",
-            #                # 订单号
-            #                "out_trade_no" => params["out_trade_no"],
-            #                # 总金额
-            #                "total_amount" => params["total_amount"],
-            #                # 固定配置
-            #                "product_code" => "FAST_INSTANT_TRADE_PAY"
-            #              }
             |> Jason.encode!()
         }
 
@@ -46,14 +34,14 @@ defmodule AlipayController do
 
         if response.status_code == 302 do
           [{"Location", response_location}] =
-            response.headers |> Enum.filter(fn {key, value} -> key == "Location" end)
+            response.headers |> Enum.filter(fn {key, _} -> key == "Location" end)
 
           %{"page_pay_url" => response_location}
         else
-          %{"msg_type" => "参数错误"}
+          %{"msg_error" => "参数错误"}
         end
       else
-        %{"msg_type" => "缺少参数"}
+        %{"msg_error" => "缺少参数"}
       end
 
     json(con, result_map)
@@ -69,7 +57,7 @@ defmodule AlipayController do
         "refund_amount"
       ])
 
-    result_map =
+
       response =
       if is_check == true do
         params = %{
@@ -84,7 +72,7 @@ defmodule AlipayController do
         IO.inspect(response)
         response
       else
-        %{"msg_type" => "缺少参数"}
+        %{"msg_error" => "缺少参数"}
       end
 
     json(con, response)
@@ -97,7 +85,7 @@ defmodule AlipayController do
       check_map_keys(params2["biz_content"], [
         "out_trade_no",
         #        "trade_no",  二选一
-        "operator_id"
+#        "operator_id"
       ])
 
     response =
@@ -115,7 +103,7 @@ defmodule AlipayController do
         IO.inspect(response)
         response
       else
-        %{"msg_type" => "缺少参数"}
+        %{"msg_error" => "缺少参数"}
       end
 
     json(con, response)
@@ -145,7 +133,7 @@ defmodule AlipayController do
         IO.inspect(body)
         body
       else
-        %{"msg_type" => "缺少参数"}
+        %{"msg_error" => "缺少参数"}
       end
 
     json(con, response)
@@ -163,8 +151,6 @@ defmodule AlipayController do
     #{private_key}
     -----END PRIVATE KEY-----
     """
-
-    aes_key = "E1W8RFTZgfHO/d3sdjg1Ow=="
 
     sorted_params = map2sign_str(params)
 
@@ -226,11 +212,11 @@ defmodule AlipayController do
         IO.inspect(response)
 
         [{"Location", response_location}] =
-          response.headers |> Enum.filter(fn {key, value} -> key == "Location" end)
+          response.headers |> Enum.filter(fn {key, _} -> key == "Location" end)
 
-        response_location
+        %{"app_url"=> response_location}
       else
-        %{"msg_type" => "缺少参数"}
+        %{"msg_error" => "缺少参数"}
       end
 
     json(con, result_map)
@@ -262,7 +248,7 @@ defmodule AlipayController do
         IO.inspect(response)
         response
       else
-        %{"msg_type" => "缺少参数"}
+        %{"msg_error" => "缺少参数"}
       end
 
     json(con, response)
@@ -311,7 +297,7 @@ defmodule AlipayController do
     signed_params = url_encode_map_value(signed_params) |> map2sign_str
     url = "#{@app_gateway}?#{signed_params}"
     IO.puts(url)
-    response = HTTPoison.get!(url, [{"Content-type", "application/json"}])
+     HTTPoison.get!(url, [{"Content-type", "application/json"}])
   end
 
   def map2sign_str(map) do
@@ -323,6 +309,10 @@ defmodule AlipayController do
   end
 
   def check_map_keys(map, keys) do
-    Enum.all?(keys, &Map.has_key?(map, &1))
+    if is_map(map) do
+      Enum.all?(keys, &Map.has_key?(map, &1))
+    else
+      false
+    end
   end
 end
