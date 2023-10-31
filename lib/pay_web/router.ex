@@ -15,7 +15,7 @@ defmodule PayWeb.Router do
   end
 
   scope "/" do
-    pipe_through :browser
+    pipe_through :api
 
         get "/alipay_app" , AlipayController, :alipay_app
         post "/alipay_refund_query" , AlipayController, :alipay_refund_query

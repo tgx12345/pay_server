@@ -7,14 +7,38 @@ defmodule AlipayController do
   @app_gateway "https://openapi-sandbox.dl.alipaydev.com/gateway.do"
   # http://localhost:4000/redirectPay?subject=大乐透&out_trade_no=000111&total_amount=9.00
   def start_pay(con, params) do
-    response_location = pay(params["subject"], params["out_trade_no"], params["total_amount"])
-#    IO.inspect(response_location)
-    [{"Location", response_location}] = response_location
+    json_params = AlipayParams.json_params() |> Map.put("method", "alipay.trade.page.pay")
+    params2 = %{
+      "return_url" => @return_url,
+      "notify_url" =>  @notify_url,
+      "biz_content" =>
+        %{
+          # 支付名称
+          "subject" => params["subject"],
+          # 扫码支付方式
+          "qr_pay_mode" => "2",
+          # 订单号
+          "out_trade_no" => params["out_trade_no"],
+          # 总金额
+          "total_amount" => params["total_amount"],
+          # 固定配置
+          "product_code" => "FAST_INSTANT_TRADE_PAY"
+        }
+        |> Jason.encode!()
+    }
+    params = Map.merge(json_params, params2)
+
+    response = get_response(params)
+    IO.inspect(response)
+    [{"Location", response_location}] = response.headers |> Enum.filter(fn {key, value} -> key == "Location" end)
     redirect(con, external: response_location)
+  end
+  def pay(subject, out_trade_no, total_amount) do
+
   end
 
   def trade_refund(con, params2) do
-    par = AlipayParams.json_params() |> Map.put(:method, "alipay.trade.refund")
+    par = AlipayParams.json_params() |> Map.put("method", "alipay.trade.refund")
 
     params = %{
       "biz_content" =>
@@ -54,33 +78,7 @@ defmodule AlipayController do
     json(con, response)
   end
 
-  def pay(subject, out_trade_no, total_amount) do
-    params = AlipayParams.json_params() |> Map.put("method", "alipay.trade.page.pay")
 
-    params2 = %{
-      "return_url" => @return_url,
-      "notify_url" =>  @notify_url,
-      "biz_content" =>
-        %{
-          # 支付名称
-          "subject" => subject,
-          # 扫码支付方式
-          "qr_pay_mode" => "2",
-          # 订单号
-          "out_trade_no" => out_trade_no,
-          # 总金额
-          "total_amount" => total_amount,
-          # 固定配置
-          "product_code" => "FAST_INSTANT_TRADE_PAY"
-        }
-        |> Jason.encode!()
-    }
-
-    params = Map.merge(params, params2)
-    response = get_response(params)
-    IO.inspect(response)
-    response_location = response.headers |> Enum.filter(fn {key, value} -> key == "Location" end)
-  end
 
   def select_info(con, params2) do
     par = AlipayParams.json_params() |> Map.put("method", "alipay.trade.query")
@@ -102,7 +100,7 @@ defmodule AlipayController do
     IO.inspect(body)
   end
 
-  def url_encode_mapValue(map) do
+  def url_encode_map_value(map) do
     Enum.reduce(map, %{}, fn {key, value}, acc ->
       Map.put(acc, key, URI.encode_www_form(value))
     end)
@@ -141,9 +139,9 @@ defmodule AlipayController do
 
     sorted_params = map2sign_str(data)
 
-    f = RsaEx.verify(sorted_params, sing, pem_string)
+    verify_result = RsaEx.verify(sorted_params, sing, pem_string)
     IO.puts("验签结果：")
-    IO.inspect(f)
+    IO.inspect(verify_result)
     json(con, params)
   end
 
@@ -225,7 +223,7 @@ defmodule AlipayController do
     private_key =AlipayParams.get_private_key()
 
     signed_params = sign_params(sign_params, private_key)
-    signed_params =url_encode_mapValue(signed_params) |>map2sign_str
+    signed_params =url_encode_map_value(signed_params) |>map2sign_str
     url = "#{@app_gateway}?#{signed_params}"
     IO.puts(url)
     response = HTTPoison.get!(url, [{"Content-type", "application/json"}])
