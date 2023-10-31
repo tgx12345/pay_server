@@ -271,11 +271,7 @@ defmodule WechatPay do
   end
 
   #验证请求参数的完整性和合法性(只验证了必填的参数)
-<<<<<<< HEAD
-  def validate_map(map) do
-=======
   def checkout_place_order_map(map) do
->>>>>>> 4928bc2eb38d4ac67b8abd3ed48c735f2a983eaf
     case {
       Map.get(map, "description"),
       Map.get(map, "out_trade_no"),
@@ -290,8 +286,6 @@ defmodule WechatPay do
         false
     end
   end
-<<<<<<< HEAD
-=======
 
   #jianc
   def checkout_refund_map(map) do
@@ -310,7 +304,6 @@ defmodule WechatPay do
         false
     end
   end
->>>>>>> 4928bc2eb38d4ac67b8abd3ed48c735f2a983eaf
 end
 
 
