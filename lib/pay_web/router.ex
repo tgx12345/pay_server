@@ -31,11 +31,11 @@ defmodule PayWeb.Router do
   scope "/api/wechatPay" do
     pipe_through :api
     post "/native", WechatPaymentController, :place_order_native
-    get "/app", WechatPaymentController, :place_order_app
+    post "/app", WechatPaymentController, :place_order_app
     post "/callback", WechatPaymentController, :callback
     get "/select", WechatPaymentController, :sel_out_trade_no
     get "/close", WechatPaymentController, :close_out_trade_no
-    get "/refund", WechatPaymentController, :refund
+    post "/refund", WechatPaymentController, :refund
     get "/refund_select", WechatPaymentController, :refund_select
     get "/test", WechatPaymentController, :test
   end

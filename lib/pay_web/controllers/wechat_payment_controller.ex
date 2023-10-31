@@ -31,12 +31,12 @@ defmodule WechatPaymentController do
   end
 
   def refund(conn, _params) do
-    response = WechatPay.refund(conn.params)
+    response = WechatPay.refund(conn.body_params)
     json(conn, response |>Jason.decode!)
   end
 
   def refund_select(conn, _params) do
-    response = WechatPay.refund_select(123)
+    response = WechatPay.refund_select(conn.params)
     json(conn, response |>Jason.decode!)
   end
 
