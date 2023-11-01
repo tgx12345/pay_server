@@ -48,4 +48,9 @@ defmodule Test do
     end
   end
 
+
+  def test() do
+    %{"message"=>"下单响应验签失败"}|>Jason.encode!
+  end
+
 end
