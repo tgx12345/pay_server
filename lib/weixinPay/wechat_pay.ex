@@ -105,6 +105,7 @@ defmodule WechatPay do
 
   #获取平台证书，动态更新公钥
   def get_ptzs() do
+    IO.inspect("定时任务启动")
     # 构造签名串
     sign_nonce_timestamp_map = build_sign_str("GET", @ptzs_url)
     headers = get_headers(sign_nonce_timestamp_map)
