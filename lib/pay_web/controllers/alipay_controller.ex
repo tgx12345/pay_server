@@ -16,10 +16,10 @@ defmodule AlipayController do
         "out_trade_no",
         "total_amount",
         "product_code"
-      ]) && Enum.all?(params["biz_content"],fn {_,v} -> is_binary(v) end)
-
+      ])
+    is_legitimate = Enum.all?(params["biz_content"],fn {_,v} -> is_binary(v)&&contains_special_characters?(v)  end)
     result_map =
-      if is_check == true do
+      if is_check && is_legitimate  do
         params2 = %{
           "return_url" => @return_url,
           "notify_url" => @notify_url,
@@ -27,21 +27,21 @@ defmodule AlipayController do
             params["biz_content"]
             |> Jason.encode!()
         }
-
         params = Map.merge(json_params, params2)
-
         response = get_response(params)
-
         if response.status_code == 302 do
           [{"Location", response_location}] =
             response.headers |> Enum.filter(fn {key, _} -> key == "Location" end)
-
-          %{"page_pay_url" => response_location}
+          %{"url" => response_location}
         else
           %{"msg_error" => "参数错误"}
         end
       else
-        %{"msg_error" => "缺少参数"}
+          if !is_legitimate do
+            %{"msg_error" => "参数不合法"}
+            else
+            %{"msg_error" => "缺少参数"}
+            end
       end
 
     json(con, result_map)
@@ -55,10 +55,10 @@ defmodule AlipayController do
         "out_trade_no",
         #        "trade_no",  二选一
         "refund_amount"
-      ]) && Enum.all?(params2["biz_content"],fn {_,v} -> is_binary(v) end)
-
+      ])
+    is_legitimate = Enum.all?(params2["biz_content"],fn {_,v} -> is_binary(v)&&contains_special_characters?(v)  end)
     response =
-      if is_check == true do
+      if is_check  && is_legitimate do
         params = %{
           "biz_content" =>
             params2["biz_content"]
@@ -68,10 +68,14 @@ defmodule AlipayController do
         params = Map.merge(par, params)
         response = get_response(params)
         response = response.body |> Jason.decode!()
-        IO.inspect(response)
         response
       else
-        %{"msg_error" => "缺少参数"}
+          if !is_legitimate do
+            %{"msg_error" => "参数不合法"}
+            else
+            %{"msg_error" => "缺少参数"}
+            end
+
       end
 
     json(con, response)
@@ -85,10 +89,10 @@ defmodule AlipayController do
         "out_trade_no"
         #        "trade_no",  二选一
         #        "operator_id"
-      ]) && Enum.all?(params2["biz_content"],fn {_,v} -> is_binary(v) end)
-
+      ])
+    is_legitimate = Enum.all?(params2["biz_content"],fn {_,v} -> is_binary(v)&&contains_special_characters?(v) end)
     response =
-      if is_check == true do
+      if is_check && is_legitimate do
         params = %{
           #    notify_url: @notify_url,
           "biz_content" =>
@@ -99,10 +103,13 @@ defmodule AlipayController do
         params = Map.merge(par, params)
         response = get_response(params)
         response = response.body |> Jason.decode!()
-        IO.inspect(response)
         response
       else
-        %{"msg_error" => "缺少参数"}
+          if !is_legitimate do
+            %{"msg_error" => "参数不合法"}
+            else
+            %{"msg_error" => "缺少参数"}
+            end
       end
 
     json(con, response)
@@ -116,10 +123,10 @@ defmodule AlipayController do
         "out_trade_no"
         #        "trade_no",  二选一
         #        "query_options",  非必选
-      ]) && Enum.all?(params2["biz_content"],fn {_,v} -> is_binary(v) end)
-
+      ])
+    is_legitimate = Enum.all?(params2["biz_content"],fn {_,v} -> is_binary(v)&&contains_special_characters?(v) end)
     response =
-      if is_check == true do
+      if is_check && is_legitimate do
         params = %{
           "biz_content" =>
             params2["biz_content"]
@@ -129,10 +136,14 @@ defmodule AlipayController do
         params = Map.merge(par, params)
         response = get_response(params)
         body = response.body |> Jason.decode!()
-        IO.inspect(body)
         body
       else
-        %{"msg_error" => "缺少参数"}
+        if !is_legitimate do
+          %{"msg_error" => "参数不合法"}
+        else
+          %{"msg_error" => "缺少参数"}
+        end
+
       end
 
     json(con, response)
@@ -152,8 +163,7 @@ defmodule AlipayController do
     """
 
     sorted_params = map2sign_str(params)
-
-    IO.puts(sorted_params)
+    
     {:ok, signature} = RsaEx.sign(sorted_params, pem_string)
     signature = Base.encode64(signature)
     newMap = Map.put_new(params, "sign", signature)
@@ -195,10 +205,10 @@ defmodule AlipayController do
         "subject",
         "out_trade_no",
         "total_amount"
-      ]) && Enum.all?(params2["biz_content"],fn {_,v} -> is_binary(v) end)
-
+      ])
+    is_legitimate = Enum.all?(params2["biz_content"],fn {_,v} -> is_binary(v)&&contains_special_characters?(v) end)
     result_map =
-      if is_check == true do
+      if is_check && is_legitimate do
         params = %{
           #      notify_url: @notify_url,
           "biz_content" =>
@@ -208,19 +218,25 @@ defmodule AlipayController do
 
         params = Map.merge(par, params)
         response = get_response(params)
-        IO.inspect(response)
+
 
         [{"Location", response_location}] =
           response.headers |> Enum.filter(fn {key, _} -> key == "Location" end)
 
-        %{"app_url" => response_location}
+        %{"url" => response_location}
       else
-        %{"msg_error" => "缺少参数"}
+        if !is_legitimate do
+          %{"msg_error" => "参数不合法"}
+        else
+          %{"msg_error" => "缺少参数"}
+        end
+
       end
 
     json(con, result_map)
-  end
 
+
+  end
   #  http://localhost:4000/redirectPay?subject=大乐透&out_trade_no=9091991&total_amount=9.00
   def alipay_refund_query(con, params2) do
     par = AlipayParams.json_params() |> Map.put("method", "alipay.trade.fastpay.refund.query")
@@ -231,10 +247,10 @@ defmodule AlipayController do
         #        "trade_no",  二选一
         # 退款请求号。请求退款接口时，传入的退款请求号，如果在退款请求时未传入，则该值为创建交易时的商户订单号。
         "out_request_no"
-      ]) && Enum.all?(params2["biz_content"],fn {_,v} -> is_binary(v) end)
-
+      ])
+    is_legitimate = Enum.all?(params2["biz_content"],fn {_,v} -> is_binary(v)&&contains_special_characters?(v) end)
     response =
-      if is_check == true do
+      if is_check && is_legitimate do
         params = %{
           "biz_content" =>
             params2["biz_content"]
@@ -244,10 +260,14 @@ defmodule AlipayController do
         params = Map.merge(par, params)
         response = get_response(params)
         response = response.body |> Jason.decode!()
-        IO.inspect(response)
         response
       else
-        %{"msg_error" => "缺少参数"}
+        if !is_legitimate do
+          %{"msg_error" => "参数不合法"}
+        else
+          %{"msg_error" => "缺少参数"}
+        end
+
       end
 
     json(con, response)
@@ -296,7 +316,6 @@ defmodule AlipayController do
     signed_params = sign_params(sign_params, private_key)
     signed_params = url_encode_map_value(signed_params) |> map2sign_str
     url = "#{@app_gateway}?#{signed_params}"
-    IO.puts(url)
     _response=  HTTPoison.get!(url, [{"Content-type", "application/json"}])
   end
 
@@ -308,6 +327,15 @@ defmodule AlipayController do
     |> Enum.join("&")
   end
 
+  def contains_special_characters?(input) do
+    re_result=Regex.scan(~r/[!@#\$%\^&\*\(\)\+={};:<>?\\|]/, input)
+#    IO.inspect(re_result)
+#    IO.inspect(input)
+    case  re_result do
+      [] -> true
+      _ -> false
+    end
+  end
   def check_map_keys(map, keys) do
     if is_map(map) do
       Enum.all?(keys, &Map.has_key?(map, &1))

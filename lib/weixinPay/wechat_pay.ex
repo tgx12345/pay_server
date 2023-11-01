@@ -272,6 +272,7 @@ defmodule WechatPay do
   end
 
   #验证请求参数的完整性和合法性(只验证了必填的参数)
+
   def checkout_place_order_map(map) do
     case {
       Map.get(map, "description"),
@@ -287,6 +288,8 @@ defmodule WechatPay do
         false
     end
   end
+
+
 
   #jianc
   def checkout_refund_map(map) do
