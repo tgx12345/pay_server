@@ -9,7 +9,7 @@ defmodule AlipayParams do
       "format" => "JSON",
       "charset" => "UTF-8",
       "sign_type" => "RSA2",
-      "timestamp" => Timex.local() |> Timex.format!("{YYYY}-{0M}-{D} {h24}:{0m}:{0s}"),
+      "timestamp" => Timex.local() |> Timex.format!("{YYYY}-{0M}-{0D} {h24}:{0m}:{0s}"),
       "version" => "1.0"
       #      encrypt_type: "AES",
       #    biz_content: %{}
