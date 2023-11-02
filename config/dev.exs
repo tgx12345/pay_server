@@ -10,6 +10,16 @@ config :pay, Pay.Repo,
         show_sensitive_data_on_connection_error: true,
         pool_size: 2
 
+
+#config :pay, Pay.Repo,
+#       username: "postgres",
+#       password: "logdata",
+#       database: "test",
+#       hostname: "192.168.31.193",
+#       port: "6432",
+#       show_sensitive_data_on_connection_error: true,
+#       pool_size: 2
+
 # For development, we disable any cache and enable
 # debugging and code reloading.
 #
