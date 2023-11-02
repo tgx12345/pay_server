@@ -32,3 +32,5 @@ pay-*.tar
 npm-debug.log
 /assets/node_modules/
 
+/lib/pay/order.ex
+/priv/repo/migrations/20231102020153_create_orders.exs

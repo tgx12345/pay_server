@@ -4,9 +4,9 @@ import Config
 config :pay, Pay.Repo,
         username: "postgres",
         password: "logdata",
-        database: "postgres",
-        hostname: "36.111.70.11",
-        port: "9999",
+        database: "test",
+        hostname: "192.168.31.193",
+        port: "6432",
         show_sensitive_data_on_connection_error: true,
         pool_size: 2
 
