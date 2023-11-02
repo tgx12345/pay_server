@@ -12,7 +12,7 @@ defmodule WechatPay do
   @refund_select "/v3/refund/domestic/refunds/"
   @ptzs_url "/v3/certificates"
   @notify_url "http://cxu2qk.natappfree.cc/api/wechatPay/callback"
-  @ptzs_no "29EA946404980EAC0D2F28BD78F0CDF333F5EEA3"
+#  @ptzs_no "29EA946404980EAC0D2F28BD78F0CDF333F5EEA3"
   @apiv3_secret "yICoWQ4SO88UFJ0TFn53pIfq2skp0sBp"
   #统一下单
   def place_an_order(payment_methods, body_params) do
@@ -28,7 +28,7 @@ defmodule WechatPay do
     sign_nonce_timestamp_map = build_sign_str("POST", url, body)
     headers = get_headers(sign_nonce_timestamp_map)
     {:ok, response} = HTTPoison.post(@base_url <> url, Jason.encode!(body), headers)
-    result = if get_verify(response)do
+    if get_verify(response)do
       response.body
     else
       %{"message" => "下单响应验签失败"}
@@ -44,7 +44,7 @@ defmodule WechatPay do
     sign_nonce_timestamp_map = build_sign_str("GET", @sel_out_trade_no_url <> num <> "?mchid=#{@mchid}")
     headers = get_headers(sign_nonce_timestamp_map)
     {:ok, response} = HTTPoison.get(@base_url <> @sel_out_trade_no_url <> num <> "?mchid=#{@mchid}", headers)
-    result = if get_verify(response)do
+    if get_verify(response)do
       response.body
     else
       %{"message" => "查询订单响应验签失败"}
@@ -66,7 +66,7 @@ defmodule WechatPay do
       Jason.encode!(body),
       headers
     )
-    result = if get_verify(response)do
+    if get_verify(response)do
       response.body
     else
       %{"message" => "关闭订单响应验签失败"}
@@ -81,7 +81,7 @@ defmodule WechatPay do
     sign_nonce_timestamp_map = build_sign_str("POST", @refund, body)
     headers = get_headers(sign_nonce_timestamp_map)
     {:ok, response} = HTTPoison.post(@base_url <> @refund, Jason.encode!(body), headers)
-    result = if get_verify(response)do
+    if get_verify(response)do
       response.body
     else
       %{"message" => "退款申请响应验签失败"}
@@ -110,7 +110,7 @@ defmodule WechatPay do
     sign_nonce_timestamp_map = build_sign_str("GET", @ptzs_url)
     headers = get_headers(sign_nonce_timestamp_map)
     {:ok, response} = HTTPoison.get(@base_url <> @ptzs_url, headers)
-    IO.inspect(response)
+#    IO.inspect(response)
     if get_verify(response) do
       #AES_256_GCM解密证书
       body = Jason.decode!(response.body)
@@ -136,7 +136,7 @@ defmodule WechatPay do
       "#{url}\n" <>
       "#{timestamp}\n" <>
       "#{nonce_str}\n\n"
-    result = %{"nonce_str" => nonce_str, "sign_str" => sign_str, "timestamp" => timestamp}
+    %{"nonce_str" => nonce_str, "sign_str" => sign_str, "timestamp" => timestamp}
   end
 
   #构造签名串POST
@@ -150,21 +150,19 @@ defmodule WechatPay do
       "#{timestamp}\n" <>
       "#{nonce_str}\n" <>
       "#{request_body}\n"
-    result = %{"nonce_str" => nonce_str, "sign_str" => sign_str, "timestamp" => timestamp}
+    %{"nonce_str" => nonce_str, "sign_str" => sign_str, "timestamp" => timestamp}
   end
 
   #获取Authorization头
   def get_authorization(nonce_str, signature, timestamp) do
-    authorization = "WECHATPAY2-SHA256-RSA2048 mchid=\"#{@mchid}\",nonce_str=\"#{nonce_str}\",signature=\"#{
-      signature
-    }\",timestamp=\"#{timestamp}\",serial_no=\"#{@serial_no}\""
+    "WECHATPAY2-SHA256-RSA2048 mchid=\"#{@mchid}\",nonce_str=\"#{nonce_str}\",signature=\"#{signature}\",timestamp=\"#{timestamp}\",serial_no=\"#{@serial_no}\""
   end
 
   #生成签名
   def get_signature(sign_str) do
     rsa_private_key = File.read!("static/certs/apiclient_key.pem")
     {:ok, signature} = RsaEx.sign(sign_str, rsa_private_key, :sha256)
-    signature = :base64.encode(signature)
+    :base64.encode(signature)
   end
 
   #响应的验签
@@ -190,7 +188,7 @@ defmodule WechatPay do
       "#{timestamp}\n" <>
       "#{nonce_str}\n" <>
       "#{request_body}\n"
-    verify_result = :public_key.verify(verify_str, :sha256, signature, pub_key)
+    :public_key.verify(verify_str, :sha256, signature, pub_key)
   end
 
   #异步请求的验签(回调验签、解密)
@@ -234,7 +232,7 @@ defmodule WechatPay do
       "#{nonce_str}\n" <>
       "#{json_encode}\n"
     verify_result = :public_key.verify(verify_str, :sha256, signature, pub_key)
-    result = if verify_result == true do
+    if verify_result == true do
       ciphertext = Map.get(Map.get(body_params, "resource"), "ciphertext")
       nonce = Map.get(Map.get(body_params, "resource"), "nonce")
       associated_data = Map.get(Map.get(body_params, "resource"), "associated_data")
@@ -246,13 +244,13 @@ defmodule WechatPay do
 
   #aes解密
   def aes_256_gcm_decrypt(ciphertext, nonce, associated_data) do
-    iv = Base.decode64!(nonce)
+#    iv = Base.decode64!(nonce)
     ciphertext = Base.decode64!(ciphertext)
     size = byte_size(ciphertext)
     ciphertext_size = size - 16
     <<ciphertext :: binary - size(ciphertext_size), tag :: binary - size(16)>> = ciphertext
-    data = :crypto.crypto_one_time_aead(:aes_256_gcm, @apiv3_secret, nonce, ciphertext, associated_data, tag, false)
-    IO.inspect(data)
+    :crypto.crypto_one_time_aead(:aes_256_gcm, @apiv3_secret, nonce, ciphertext, associated_data, tag, false)
+#    IO.inspect(data)
   end
 
   #构造请求headers
@@ -264,7 +262,7 @@ defmodule WechatPay do
       signature,
       Map.get(sign_nonce_timestamp_map, "timestamp")
     )
-    headers = [
+    [
       {"Authorization", authorization},
       {"Accept", "application/json"},
       {"Content-Type", "application/json"}
