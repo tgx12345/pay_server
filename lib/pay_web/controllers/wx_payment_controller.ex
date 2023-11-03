@@ -1,4 +1,4 @@
-defmodule WechatPaymentController do
+defmodule WxPaymentController do
   use PayWeb, :controller
 
   def place_order_native(conn, _params) do

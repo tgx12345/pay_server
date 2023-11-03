@@ -34,14 +34,14 @@ defmodule PayWeb.Router do
 
   scope "/wx" do
     pipe_through :api
-    post "/native", WechatPaymentController, :place_order_native
-    post "/app", WechatPaymentController, :place_order_app
-    post "/callback", WechatPaymentController, :callback
-    get "/select", WechatPaymentController, :sel_out_trade_no
-    get "/close", WechatPaymentController, :close_out_trade_no
-    post "/refund", WechatPaymentController, :refund
-    get "/refund_select", WechatPaymentController, :refund_select
-    get "/test", WechatPaymentController, :test
+    post "/native", WxPaymentController, :place_order_native
+    post "/app", WxPaymentController, :place_order_app
+    post "/callback", WxPaymentController, :callback
+    get "/select", WxPaymentController, :sel_out_trade_no
+    get "/close", WxPaymentController, :close_out_trade_no
+    post "/refund", WxPaymentController, :refund
+    get "/refund_select", WxPaymentController, :refund_select
+    get "/test", WxPaymentController, :test
   end
 
   # Other scopes may use custom stacks.
