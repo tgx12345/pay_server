@@ -28,27 +28,33 @@ defmodule WechatPay do
     sign_nonce_timestamp_map = build_sign_str("POST", url, body)
     headers = get_headers(sign_nonce_timestamp_map)
     {:ok, response} = HTTPoison.post(@base_url <> url, Jason.encode!(body), headers)
+    IO.inspect(response)
     if get_verify(response)do
-      response.body
+      if response.status_code == 200 do
+        %{"status_code"=>200,"msg"=>"生成订单成功","params"=>response.body|> Jason.decode!()}
+        else
+        %{"status_code"=>400,"msg"=>"生成订单失败","params"=>response.body|> Jason.decode!()}
+      end
     else
-      %{"message" => "下单响应验签失败"}
-      |> Jason.encode!
+      %{"status_code"=>500,"msg"=>"下单响应验签失败","params"=>%{}}
     end
   end
 
   #查询订单
   def sel_out_trade_no(num) do
-
     num = Map.get(num, "out_trade_no")
     # 构造签名串
     sign_nonce_timestamp_map = build_sign_str("GET", @sel_out_trade_no_url <> num <> "?mchid=#{@mchid}")
     headers = get_headers(sign_nonce_timestamp_map)
     {:ok, response} = HTTPoison.get(@base_url <> @sel_out_trade_no_url <> num <> "?mchid=#{@mchid}", headers)
     if get_verify(response)do
-      response.body
+      if response.status_code == 200 do
+        %{"status_code"=>200,"msg"=>"查询订单成功","params"=>response.body|> Jason.decode!()}
+        else
+        %{"status_code"=>400,"msg"=>"查询订单失败","params"=>response.body|> Jason.decode!()}
+      end
     else
-      %{"message" => "查询订单响应验签失败"}
-      |> Jason.encode!
+      %{"status_code"=>500,"msg"=>"查询订单响应验签失败","params"=>%{}}
     end
   end
 
@@ -61,16 +67,16 @@ defmodule WechatPay do
     sign_nonce_timestamp_map = build_sign_str("POST", @close_out_trade_no_url <> num <> "/close", body)
 
     headers = get_headers(sign_nonce_timestamp_map)
-    {:ok, response} = HTTPoison.post(
-      @base_url <> @close_out_trade_no_url <> num <> "/close",
-      Jason.encode!(body),
-      headers
-    )
+    {:ok, response} = HTTPoison.post(@base_url <> @close_out_trade_no_url <> num <> "/close", Jason.encode!(body), headers)
+    IO.inspect(response)
     if get_verify(response)do
-      response.body
+      if response.status_code == 204 do
+        %{"status_code"=>200,"msg"=>"关闭订单成功","params"=>response.body}
+        else
+        %{"status_code"=>400,"msg"=>"关闭订单失败","params"=>response.body|>Jason.decode!}
+      end
     else
-      %{"message" => "关闭订单响应验签失败"}
-      |> Jason.encode!
+      %{"status_code"=>500,"msg"=>"关闭订单响应验签失败","params"=>%{}}
     end
   end
 
@@ -81,11 +87,15 @@ defmodule WechatPay do
     sign_nonce_timestamp_map = build_sign_str("POST", @refund, body)
     headers = get_headers(sign_nonce_timestamp_map)
     {:ok, response} = HTTPoison.post(@base_url <> @refund, Jason.encode!(body), headers)
+    IO.inspect(response)
     if get_verify(response)do
-      response.body
+      if response.status_code == 200 do
+        %{"status_code"=>200,"msg"=>"退款申请成功","params"=>response.body|> Jason.decode!}
+        else
+        %{"status_code"=>400,"msg"=>"退款申请失败","params"=>response.body|> Jason.decode!}
+      end
     else
       %{"message" => "退款申请响应验签失败"}
-      |> Jason.encode!
     end
   end
 
@@ -96,10 +106,16 @@ defmodule WechatPay do
     sign_nonce_timestamp_map = build_sign_str("GET", @refund_select <> num)
     headers = get_headers(sign_nonce_timestamp_map)
     {:ok, response} = HTTPoison.get(@base_url <> @refund_select <> num, headers)
+    IO.inspect(response)
+
     if get_verify(response) do
-      response.body
+      if response.status_code == 200 do
+        %{"status_code"=>200,"msg"=>"查询退款订单成功","params"=>response.body|>Jason.decode!}
+        else
+        %{"status_code"=>400,"msg"=>"查询退款订单失败","params"=>%{}}
+      end
     else
-      "查询退款订单响应验签失败"
+      %{"status_code"=>500,"msg"=>"查询退款订单响应验签失败","params"=>%{}}
     end
   end
 
@@ -236,9 +252,9 @@ defmodule WechatPay do
       ciphertext = Map.get(Map.get(body_params, "resource"), "ciphertext")
       nonce = Map.get(Map.get(body_params, "resource"), "nonce")
       associated_data = Map.get(Map.get(body_params, "resource"), "associated_data")
-      aes_256_gcm_decrypt(ciphertext, nonce, associated_data)
+      aes_256_gcm_decrypt(ciphertext, nonce, associated_data)|>Jason.decode!
     else
-      false
+      %{}
     end
   end
 
