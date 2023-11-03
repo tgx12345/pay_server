@@ -32,16 +32,12 @@ defmodule AlipayController do
         if response.status_code == 302 do
           [{"Location", response_location}] =
             response.headers |> Enum.filter(fn {key, _} -> key == "Location" end)
-          %{"url" => response_location}
+          %{status_code: 200, msg: "生成订单成功", params: %{url: response_location}}
         else
-          %{"msg_error" => "参数错误"}
+         %{status_code: 400, msg: "参数错误", params: %{}}
         end
       else
-          if !is_legitimate do
-            %{"msg_error" => "参数不合法"}
-            else
-            %{"msg_error" => "缺少参数"}
-            end
+         %{status_code: 400, msg: "参数错误", params: %{}}
       end
 
     json(con, result_map)
@@ -68,14 +64,13 @@ defmodule AlipayController do
         params = Map.merge(par, params)
         response = get_response(params)
         response = response.body |> Jason.decode!()
-        response
+        if(response["alipay_trade_refund_response"]["code"] == "10000") do
+          %{status_code: 200, msg: "退款成功", params: response}
+        else
+          %{status_code: 400, msg: "接口调用失败", params: response}
+        end
       else
-          if !is_legitimate do
-            %{"msg_error" => "参数不合法"}
-            else
-            %{"msg_error" => "缺少参数"}
-            end
-
+        %{status_code: 400, msg: "参数错误", params: %{}}
       end
 
     json(con, response)
@@ -103,13 +98,13 @@ defmodule AlipayController do
         params = Map.merge(par, params)
         response = get_response(params)
         response = response.body |> Jason.decode!()
-        response
+        if(response["alipay_trade_refund_response"]["code"] == "10000") do
+          %{status_code: 200, msg: "订单关闭成功", params: response}
+        else
+          %{status_code: 400, msg: "接口调用失败", params: response}
+        end
       else
-          if !is_legitimate do
-            %{"msg_error" => "参数不合法"}
-            else
-            %{"msg_error" => "缺少参数"}
-            end
+        %{status_code: 400, msg: "参数错误", params: %{}}
       end
 
     json(con, response)
@@ -136,14 +131,13 @@ defmodule AlipayController do
         params = Map.merge(par, params)
         response = get_response(params)
         body = response.body |> Jason.decode!()
-        body
-      else
-        if !is_legitimate do
-          %{"msg_error" => "参数不合法"}
+        if(response["alipay_trade_refund_response"]["code"] == "10000") do
+          %{status_code: 200, msg: "订单查询成功", params: body}
         else
-          %{"msg_error" => "缺少参数"}
+          %{status_code: 400, msg: "接口调用失败", params: body}
         end
-
+      else
+        %{status_code: 400, msg: "参数错误", params: %{}}
       end
 
     json(con, response)
@@ -190,9 +184,9 @@ defmodule AlipayController do
     IO.inspect(verify_result)
 
     if verify_result == true do
-      json(con, %{"verify_result" => "验签成功", "params" => params})
+      json(con,%{status_code: 200, msg: "验签成功", params: params})
     else
-      json(con, %{"verify_result" => "验签失败", "params" => params})
+      json(con, %{status_code: 400, msg: "验签失败", params: %{}})
     end
   end
 
@@ -222,14 +216,9 @@ defmodule AlipayController do
 
         [{"Location", response_location}] =
           response.headers |> Enum.filter(fn {key, _} -> key == "Location" end)
-
-        %{"url" => response_location}
+        %{status_code: 200, msg: "生成订单成功", params: %{url: response_location}}
       else
-        if !is_legitimate do
-          %{"msg_error" => "参数不合法"}
-        else
-          %{"msg_error" => "缺少参数"}
-        end
+        %{status_code: 400, msg: "参数错误", params: %{}}
 
       end
 
@@ -260,14 +249,13 @@ defmodule AlipayController do
         params = Map.merge(par, params)
         response = get_response(params)
         response = response.body |> Jason.decode!()
-        response
-      else
-        if !is_legitimate do
-          %{"msg_error" => "参数不合法"}
+        if(response["alipay_trade_refund_response"]["code"] == "10000") do
+          %{status_code: 200, msg: "退款查询成功", params: response}
         else
-          %{"msg_error" => "缺少参数"}
+          %{status_code: 400, msg: "接口调用失败", params: response}
         end
-
+      else
+        %{status_code: 400, msg: "参数错误", params: %{}}
       end
 
     json(con, response)
@@ -292,9 +280,9 @@ defmodule AlipayController do
     verify_result = RsaEx.verify(sorted_params, sing, pem_string)
 
     if verify_result == true do
-      json(con, %{"verify_result" => "验签成功", "params" => params})
+      json(con,%{status_code: 200, msg: "验签成功", params: params})
     else
-      json(con, %{"verify_result" => "验签失败", "params" => params})
+      json(con, %{status_code: 400, msg: "验签失败", params: %{}})
     end
   end
 
