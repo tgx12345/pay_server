@@ -34,3 +34,5 @@ npm-debug.log
 
 /lib/pay/order.ex
 /priv/repo/migrations/20231102020153_create_orders.exs
+/.idea
+/.idea
