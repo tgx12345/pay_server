@@ -67,7 +67,7 @@ defmodule AlipayController do
         if(response["alipay_trade_refund_response"]["code"] == "10000") do
           %{status_code: 200, msg: "退款成功", params: response}
         else
-          %{status_code: 400, msg: "接口调用失败", params: response}
+          %{status_code: 400, msg: response["alipay_trade_refund_response"]["sub_msg"], params: response}
         end
       else
         %{status_code: 400, msg: "参数错误", params: %{}}
@@ -101,7 +101,7 @@ defmodule AlipayController do
         if(response["alipay_trade_refund_response"]["code"] == "10000") do
           %{status_code: 200, msg: "订单关闭成功", params: response}
         else
-          %{status_code: 400, msg: "接口调用失败", params: response}
+          %{status_code: 400, msg: response["alipay_trade_refund_response"]["sub_msg"], params: response}
         end
       else
         %{status_code: 400, msg: "参数错误", params: %{}}
@@ -134,7 +134,7 @@ defmodule AlipayController do
         if(response["alipay_trade_refund_response"]["code"] == "10000") do
           %{status_code: 200, msg: "订单查询成功", params: body}
         else
-          %{status_code: 400, msg: "接口调用失败", params: body}
+          %{status_code: 400, msg: response["alipay_trade_refund_response"]["sub_msg"], params: body}
         end
       else
         %{status_code: 400, msg: "参数错误", params: %{}}
@@ -252,7 +252,7 @@ defmodule AlipayController do
         if(response["alipay_trade_refund_response"]["code"] == "10000") do
           %{status_code: 200, msg: "退款查询成功", params: response}
         else
-          %{status_code: 400, msg: "接口调用失败", params: response}
+          %{status_code: 400, msg: response["alipay_trade_refund_response"]["sub_msg"], params: response}
         end
       else
         %{status_code: 400, msg: "参数错误", params: %{}}
